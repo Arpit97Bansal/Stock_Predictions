@@ -1,0 +1,171 @@
+#!/usr/bin/py
+import os
+from numpy import matrix
+from numpy import linalg
+
+def printTransactions(m, k, d, name, owned, prices):
+    flags = os.O_CREAT
+    f=os.open('output.txt',flags)
+    #f.close()
+    f=open("output.txt","r")
+    price_tot = [[] for _ in xrange(k)]
+    j=0
+    while(j<k):
+        #print("E")
+        line = f.readline()
+        #print(line)
+        temp = line.strip().split()
+        price_tot[j] = [float(i) for i in temp[1:]]
+        #print(price_tot[j])
+        j=j+1
+    #print(temp)
+    #print(price_tot)
+    if not price_tot[0]:
+        i=0
+        while(i<k):
+            price_tot[i]=prices[i]
+            i=i+1
+    else:
+        i=0
+        while(i<k):
+            price_tot[i].append(prices[i][4])
+            i=i+1
+    f.close()
+    f=open("output.txt","w")
+    i=0
+    p = len(price_tot[1])
+    #print(p)
+    while(i<k):
+        f.write(name[i])
+        f.write(" ")
+        j=0
+        #print(i)
+        while(j<p):
+            #print(j)
+            f.write(str(price_tot[i][j]))
+            j=j+1
+            f.write(" ")
+        f.write("\n")
+        i=i+1
+    f.close()
+    #print(price_tot)
+    i=0 
+    degree = 2
+    Train = [[] for _ in xrange(p)]
+    while(i<p):
+        j=0
+        while(j<=degree):
+            Train[i].append((i+1)**j)
+            j=j+1
+        i=i+1
+    Test = []
+    j=0
+    while(j<=degree):
+        Test.append((p+1)**j)
+        j=j+1
+    X_mat = matrix(Train)
+    #print(X_mat)
+    i=0
+    ans = []
+    while(i<k):
+        Y_matT = matrix(price_tot[i])
+        Y_mat = Y_matT.T
+        X_matT= X_mat.T
+        X = X_matT*X_mat
+        X_inv=X.I
+        X1=X_matT*Y_mat
+        V=X_inv*X1
+        Test_mat = matrix(Test)
+        #print(i)
+        #print(Test_mat)
+        #print(V)
+        cost = Test_mat*V
+        #print(cost)
+        #print(cost[0])
+        ans1=cost[0].tolist()
+        #print(ans1[0])
+        ans.append(ans1[0][0])
+        #print(Y_mat)
+        #print("\n")
+        i=i+1   
+    #print(ans)
+    m=m*5/5
+    max1=0
+    max2=0
+    max1_i=-1
+    max2_i=-1
+    i=0
+    opr=0
+    sold=0
+    buy=0
+    sell = []
+    while(i<k):
+        profit = (ans[i]-price_tot[i][p-1])*100/(price_tot[i][p-1])
+        #print(profit)
+        if(profit>0):
+            if(profit>max1):
+                max2=max1
+                max2_i=max1_i
+                max1=profit
+                max1_i=i
+        if(owned[i]):
+            if(profit<0):
+                sold=sold+1
+                opr=opr+1
+        i=i+1
+    
+    if(max1_i!=-1):
+        num=(m)/(price_tot[max1_i][p-1])
+        if(num>=1):
+            opr=opr+1
+            buy=buy+1
+    #if(max2_i!=-1):
+     #   num=(m/2)/(price_tot[max2_i][p-1])
+#         if(num>=1):
+       #     opr=opr+1
+        #    buy=buy+1
+    print(opr)
+    if(max1_i!=-1):
+        num=(m)/(price_tot[max1_i][p-1])
+        if(num>=1):
+            print(name[max1_i]+" "+"BUY"+" "+str(int(num)))
+#    if(max2_i!=-1):
+#        num=(m/2)/(price_tot[max2_i][p-1])
+#        if(num>=1):
+#            print(name[max2_i]+" "+"BUY"+" "+str(int(num)))
+    i=0
+    while(i<k):
+        profit = (ans[i]-price_tot[i][p-1])*100/(price_tot[i][p-1])
+        #print(profit)
+        if(profit>0):
+            if(profit>max1):
+                max2=max1
+                max2_i=max1_i
+                max1=profit
+                max1_i=i
+        if(owned[i]):
+            if(profit<0):
+                print(name[i]+" "+"SELL"+" "+str(int(owned[i])))
+        i=i+1   
+    #print(sold)
+    #print(buy)
+    #print(m/2)
+    #num=(m/2)/(price_tot[max1_i][p-1])
+    #print(price_tot[max1_i][p-1])
+    #print(num)
+    #f.close()
+    
+if __name__ == '__main__':
+    m, k, d = [float(i) for i in raw_input().strip().split()]
+    k = int(k)
+    d = int(d)
+    names = []
+    owned = []
+    prices = []
+    for data in range(k):
+        temp = raw_input().strip().split()
+        names.append(temp[0])
+        owned.append(int(temp[1]))
+        prices.append([float(i) for i in temp[2:7]])
+
+    printTransactions(m, k, d, names, owned, prices)
